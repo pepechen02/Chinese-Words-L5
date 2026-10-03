@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>第五課 超級英雄 圈詞與成語</title>
+<style>
+:root{
+  --bg:#f5f3ee; --card-front:#3f6b8f; --card-back:#fff; --text:#1e2a33;
+  --accent:#c76b3d; --sub:#6b7680; --tab-bg:#e7e2d8; --tab-active:#3f6b8f;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1b1f24; --card-front:#2f4c66; --card-back:#262b31; --text:#ecebe8;
+    --accent:#e08a5b; --sub:#9aa4ad; --tab-bg:#2a2f36; --tab-active:#4a7aa3;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1b1f24; --card-front:#2f4c66; --card-back:#262b31; --text:#ecebe8;
+  --accent:#e08a5b; --sub:#9aa4ad; --tab-bg:#2a2f36; --tab-active:#4a7aa3;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"PingFang TC","Microsoft JhengHei",sans-serif;min-height:100%;}
+header{padding:14px 16px 6px;text-align:center;}
+h1{font-size:1.1rem;margin:0;}
+.tabs{display:flex;gap:8px;padding:8px 12px 10px;flex-wrap:wrap;justify-content:center;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;}
+.tab{padding:8px 14px;border-radius:999px;background:var(--tab-bg);color:var(--text);border:none;font-size:0.95rem;cursor:pointer;}
+.tab.active{background:var(--tab-active);color:#fff;}
+.ctrlrow{display:flex;gap:8px;justify-content:center;padding:0 12px 8px;}
+.ctrlbtn{padding:6px 14px;border-radius:999px;background:var(--tab-bg);color:var(--text);border:1px solid var(--sub);font-size:.85rem;cursor:pointer;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;padding:6px 12px 30px;max-width:960px;margin:0 auto;}
+.card{aspect-ratio:4/3;perspective:900px;cursor:pointer;}
+.inner{position:relative;width:100%;height:100%;transition:transform .5s;transform-style:preserve-3d;}
+.card.flip .inner{transform:rotateY(180deg);}
+.face{position:absolute;inset:0;-webkit-backface-visibility:hidden;backface-visibility:hidden;border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.15);}
+.front{background:var(--card-front);}
+.playbtn{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);border:2px solid #fff;color:#fff;font-size:1.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.playbtn:active{background:rgba(255,255,255,.3);}
+.back{background:var(--card-back);color:var(--text);transform:rotateY(180deg);}
+.wordrow{display:flex;flex-direction:row;gap:10px;align-items:flex-start;justify-content:center;flex-wrap:wrap;}
+.charcol{display:flex;flex-direction:column;align-items:center;}
+.ch{font-size:1.4rem;font-weight:700;line-height:1.2;}
+.zy{margin-top:3px;display:flex;flex-direction:column;align-items:center;font-size:.55rem;color:var(--accent);line-height:1.15;}
+.zy .dot-top{line-height:1;margin-bottom:1px;}
+.zy .zy-row{display:flex;flex-direction:row;align-items:center;}
+.zy .letters{display:flex;flex-direction:column;align-items:center;}
+.zy .tone{margin-left:3px;font-size:.6rem;align-self:center;}
+</style>
+</head>
+<body>
+<header><h1>第五課 超級英雄 圈詞與成語</h1></header>
+<div class="tabs" id="tabs"></div>
+<div class="ctrlrow">
+  <button class="ctrlbtn" id="openAll">全部打開</button>
+  <button class="ctrlbtn" id="closeAll">全部關上</button>
+</div>
+<div class="grid" id="grid"></div>
+<script>
+const CHARS=[
+["宏揚","ㄏㄨㄥˊ ㄧㄤˊ"],["揚言","ㄧㄤˊ ㄧㄢˊ"],["場地","ㄔㄤˇ ㄉㄧˋ"],["操場","ㄘㄠ ㄔㄤˇ"],["太陽","ㄊㄞˋ ㄧㄤˊ"],["陽光","ㄧㄤˊ ㄍㄨㄤ"],["楊桃","ㄧㄤˊ ㄊㄠˊ"],["楊柳","ㄧㄤˊ ㄌㄧㄡˇ"],
+["冷颼颼","ㄌㄥˇ ㄙㄡ ㄙㄡ"],["餿水","ㄙㄡ ㄕㄨㄟˇ"],["餿主意","ㄙㄡ ㄓㄨˇ ㄧˋ"],["搜救","ㄙㄡ ㄐㄧㄡˋ"],["搜尋","ㄙㄡ ㄒㄩㄣˊ"],
+["噱頭","ㄒㄩㄝ ㄊㄡˊ"],["根據","ㄍㄣ ㄐㄩˋ"],["依據","ㄧ ㄐㄩˋ"],["戲劇","ㄒㄧˋ ㄐㄩˋ"],["劇烈","ㄐㄩˋ ㄌㄧㄝˋ"],
+["晶瑩剔透","ㄐㄧㄥ ㄧㄥˊ ㄊㄧ ㄊㄡˋ"],["露營","ㄌㄨˋ ㄧㄥˊ"],["經營","ㄐㄧㄥ ㄧㄥˊ"],["螢火蟲","ㄧㄥˊ ㄏㄨㄛˇ ㄔㄨㄥˊ"],["螢幕","ㄧㄥˊ ㄇㄨˋ"],
+["停頓","ㄊㄧㄥˊ ㄉㄨㄣˋ"],["整頓","ㄓㄥˇ ㄉㄨㄣˋ"],["頑皮","ㄨㄢˊ ㄆㄧˊ"],["頑固","ㄨㄢˊ ㄍㄨˋ"],["順風","ㄕㄨㄣˋ ㄈㄥ"],["和順","ㄏㄜˊ ㄕㄨㄣˋ"],["預約","ㄩˋ ㄩㄝ"],["預感","ㄩˋ ㄍㄢˇ"]
+];
+const POLY=[
+["動脈","ㄉㄨㄥˋ ㄇㄞˋ"],["靜脈","ㄐㄧㄥˋ ㄇㄞˋ"],["葉脈","ㄧㄝˋ ㄇㄞˋ"],["山脈","ㄕㄢ ㄇㄞˋ"],["一脈單傳","ㄧ ㄇㄞˋ ㄉㄢ ㄔㄨㄢˊ"],["脈診","ㄇㄞˋ ㄓㄣˇ"],["把脈","ㄅㄚˇ ㄇㄞˋ"],["含情脈脈","ㄏㄢˊ ㄑㄧㄥˊ ㄇㄛˋ ㄇㄛˋ"],
+["創口","ㄔㄨㄤ ㄎㄡˇ"],["創傷","ㄔㄨㄤ ㄕㄤ"],["首創","ㄕㄡˇ ㄔㄨㄤˋ"],["草創","ㄘㄠˇ ㄔㄨㄤˋ"],["創見","ㄔㄨㄤˋ ㄐㄧㄢˋ"],["創意","ㄔㄨㄤˋ ㄧˋ"]
+];
+const VOCAB=[
+["英雄","ㄧㄥ ㄒㄩㄥˊ"],["神采飛揚","ㄕㄣˊ ㄘㄞˇ ㄈㄟ ㄧㄤˊ"],["媲美","ㄆㄧˋ ㄇㄟˇ"],["搜尋","ㄙㄡ ㄒㄩㄣˊ"],["劇情","ㄐㄩˋ ㄑㄧㄥˊ"],["螢幕","ㄧㄥˊ ㄇㄨˋ"],["拯救","ㄓㄥˇ ㄐㄧㄡˋ"],["預告片","ㄩˋ ㄍㄠˋ ㄆㄧㄢˋ"],["來龍去脈","ㄌㄞˊ ㄌㄨㄥˊ ㄑㄩˋ ㄇㄞˋ"],["院線片","ㄩㄢˋ ㄒㄧㄢˋ ㄆㄧㄢˋ"],["授權","ㄕㄡˋ ㄑㄩㄢˊ"],["觸犯","ㄔㄨˋ ㄈㄢˋ"],["吔","˙ㄧㄝ"],["違法","ㄨㄟˊ ㄈㄚˇ"],["公司","ㄍㄨㄥ ㄙ"],["利潤","ㄌㄧˋ ㄖㄨㄣˋ"],["錯愕","ㄘㄨㄛˋ ㄜˋ"],["創作者","ㄔㄨㄤˋ ㄗㄨㄛˋ ㄓㄜˇ"]
+];
+const IDIOM=[
+["神采奕奕","ㄕㄣˊ ㄘㄞˇ ㄧˋ ㄧˋ"],["搜索枯腸","ㄙㄡ ㄙㄨㄛˇ ㄎㄨ ㄔㄤˊ"],["傾囊相授","ㄑㄧㄥ ㄋㄤˊ ㄒㄧㄤ ㄕㄡˋ"],["陽奉陰違","ㄧㄤˊ ㄈㄥˋ ㄧㄣ ㄨㄟˊ"],["司空見慣","ㄙ ㄎㄨㄥ ㄐㄧㄢˋ ㄍㄨㄢˋ"],["珠圓玉潤","ㄓㄨ ㄩㄢˊ ㄩˋ ㄖㄨㄣˋ"],["揚眉吐氣","ㄧㄤˊ ㄇㄟˊ ㄊㄨˇ ㄑㄧˋ"]
+];
+function toCards(list){return list.map(([w,zy])=>({word:w,zy:zy}));}
+const SETS={
+  chars:{label:"字形辨別 ("+CHARS.length+")",data:toCards(CHARS)},
+  poly:{label:"多音字 ("+POLY.length+")",data:toCards(POLY)},
+  vocab:{label:"語詞解釋 ("+VOCAB.length+")",data:toCards(VOCAB)},
+  idiom:{label:"成語 ("+IDIOM.length+")",data:toCards(IDIOM)}
+};
+const tabsEl=document.getElementById("tabs"), gridEl=document.getElementById("grid");
+let current="chars", voice=null;
+function pickVoice(){
+  const vs=speechSynthesis.getVoices();
+  voice=vs.find(v=>v.lang==="zh-TW")||vs.find(v=>v.lang&&v.lang.startsWith("zh"))||null;
+}
+speechSynthesis.onvoiceschanged=pickVoice; pickVoice();
+function speak(text){
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="zh-TW"; if(voice) u.voice=voice; u.rate=0.85;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function zyHTML(syll){
+  if(!syll) return "";
+  let tone="", base=syll;
+  if(base[0]==="˙"){ tone="˙"; base=base.slice(1); }
+  else if(/[ˊˇˋ]$/.test(base)){ tone=base.slice(-1); base=base.slice(0,-1); }
+  const letters=Array.from(base).map(l=>`<div>${l}</div>`).join("");
+  if(tone==="˙"){
+    return `<div class="dot-top">˙</div><div class="zy-row"><div class="letters">${letters}</div></div>`;
+  }
+  const toneHTML=tone?`<span class="tone">${tone}</span>`:"";
+  return `<div class="zy-row"><div class="letters">${letters}</div>${toneHTML}</div>`;
+}
+function wordRow(word,zy){
+  const chars=Array.from(word), zys=zy.split(" ");
+  return chars.map((c,i)=>`<div class="charcol"><div class="ch">${c}</div><div class="zy">${zyHTML(zys[i])}</div></div>`).join("");
+}
+function render(){
+  gridEl.innerHTML="";
+  SETS[current].data.forEach(item=>{
+    const card=document.createElement("div"); card.className="card";
+    card.innerHTML=`<div class="inner">
+      <div class="face front"><div class="playbtn">🔊</div></div>
+      <div class="face back"><div class="wordrow">${wordRow(item.word,item.zy)}</div></div>
+    </div>`;
+    card.querySelector(".playbtn").addEventListener("click",(e)=>{e.stopPropagation();speak(item.word);});
+    card.addEventListener("click",()=>card.classList.toggle("flip"));
+    gridEl.appendChild(card);
+  });
+}
+function renderTabs(){
+  tabsEl.innerHTML="";
+  Object.keys(SETS).forEach(key=>{
+    const b=document.createElement("button");
+    b.className="tab"+(key===current?" active":"");
+    b.textContent=SETS[key].label;
+    b.addEventListener("click",()=>{current=key;renderTabs();render();});
+    tabsEl.appendChild(b);
+  });
+}
+document.getElementById("openAll").addEventListener("click",()=>{
+  document.querySelectorAll(".card").forEach(c=>c.classList.add("flip"));
+});
+document.getElementById("closeAll").addEventListener("click",()=>{
+  document.querySelectorAll(".card").forEach(c=>c.classList.remove("flip"));
+});
+renderTabs(); render();
+</script>
+</body>
+</html>
